@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "DEBUG_FLUTTER: Environment:"
+env | grep FLUTTER
+echo "DEBUG_FLUTTER: Command: $@"
+exec /opt/homebrew/share/flutter/bin/flutter "$@"
