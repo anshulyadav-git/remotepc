@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../auth_service.dart';
 
@@ -50,19 +51,20 @@ class _RegisterPageState extends State<RegisterPage> {
     });
     try {
       await context.read<AuthService>().registerWithEmail(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            firstName: _firstNameController.text.trim(),
-            lastName: _lastNameController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
-            username: _usernameController.text.trim(),
-          );
-      
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        username: _usernameController.text.trim(),
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                'Account created! Please check your email to verify your account.'),
+              'Account created! Please check your email to verify your account.',
+            ),
             duration: Duration(seconds: 5),
             backgroundColor: Colors.green,
           ),
@@ -72,6 +74,60 @@ class _RegisterPageState extends State<RegisterPage> {
     } on FirebaseAuthException catch (e) {
       setState(() {
         _error = e.message ?? 'Registration error';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _registerWithGoogle() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final credential = await context.read<AuthService>().signInWithGoogle();
+      if (credential != null && mounted) {
+        Navigator.of(context).pop(); // Go back to login or home
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _error = e.message ?? 'Google sign-up error';
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'An unexpected error occurred';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _registerWithGithub() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final credential = await context.read<AuthService>().signInWithGithub();
+      if (credential.user != null && mounted) {
+        Navigator.of(context).pop();
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _error = e.message ?? 'GitHub sign-up error';
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'An unexpected error occurred';
       });
     } finally {
       if (mounted) {
@@ -102,13 +158,18 @@ class _RegisterPageState extends State<RegisterPage> {
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.1),
-                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.3),
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline,
-                              color: Colors.red[700], size: 20),
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red[700],
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -242,6 +303,50 @@ class _RegisterPageState extends State<RegisterPage> {
                           : const Text('Create Account'),
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  const Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('OR', style: TextStyle(color: Colors.grey)),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _loading ? null : _registerWithGoogle,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const FaIcon(FontAwesomeIcons.google, size: 18),
+                          label: const Text('Google'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _loading ? null : _registerWithGithub,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const FaIcon(FontAwesomeIcons.github, size: 18),
+                          label: const Text('GitHub'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
