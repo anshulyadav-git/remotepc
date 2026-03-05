@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "127205810460",
+    "project_id": "login-aydigi",
+    "storage_bucket": "login-aydigi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127205810460:android:04b6ca76909235d6579ad9",
+        "android_client_info": {
+          "package_name": "com.example.login"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "127205810460-ut0rs90767qon0bjhvmo8o4u47ksvblp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.login",
+            "certificate_hash": "be3335057e39d2a90edd23012ff3ef5bed9fedb0"
+          }
+        },
+        {
+          "client_id": "127205810460-r2mf8j2476qnmp8q9cl33u21gdrnacon.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAE0dLy25Mm6ie2ZldeKGvflGxOsfEKoI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "127205810460-r2mf8j2476qnmp8q9cl33u21gdrnacon.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "127205810460-i1g216e160mtqdsqo1n7sc7g14h193ie.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.login"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
