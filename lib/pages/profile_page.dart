@@ -22,9 +22,21 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     final user = FirebaseAuth.instance.currentUser;
-    final names = user?.displayName?.split(' ') ?? ['', ''];
-    _firstNameController = TextEditingController(text: names.isNotEmpty ? names[0] : '');
-    _lastNameController = TextEditingController(text: names.length > 1 ? names.sublist(1).join(' ') : '');
+    final names = (user?.displayName ?? '').split(' ');
+    
+    // Handle cases where display name might be empty or have multiple parts
+    String firstName = '';
+    String lastName = '';
+    
+    if (names.isNotEmpty) {
+      firstName = names.first;
+      if (names.length > 1) {
+        lastName = names.sublist(1).join(' ');
+      }
+    }
+
+    _firstNameController = TextEditingController(text: firstName);
+    _lastNameController = TextEditingController(text: lastName);
     _phoneController = TextEditingController(text: user?.phoneNumber ?? '');
     _photoUrlController = TextEditingController(text: user?.photoURL ?? '');
   }
@@ -44,11 +56,16 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _loading = true);
 
     try {
+      final firstName = _firstNameController.text.trim();
+      final lastName = _lastNameController.text.trim();
+      final photoUrl = _photoUrlController.text.trim();
+
       await context.read<AuthService>().updateProfile(
-            firstName: _firstNameController.text.trim(),
-            lastName: _lastNameController.text.trim(),
-            photoUrl: _photoUrlController.text.trim().isEmpty ? null : _photoUrlController.text.trim(),
+            firstName: firstName,
+            lastName: lastName,
+            photoUrl: photoUrl.isEmpty ? null : photoUrl,
           );
+          
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
@@ -136,7 +153,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           labelText: 'First Name',
                           prefixIcon: Icon(Icons.person_outline),
                         ),
-                        validator: (value) => value == null || value.isEmpty
+                        validator: (value) => value == null || value.trim().isEmpty
                             ? 'Enter first name'
                             : null,
                       ),
@@ -149,7 +166,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           labelText: 'Last Name',
                           prefixIcon: Icon(Icons.person_outline),
                         ),
-                        validator: (value) => value == null || value.isEmpty
+                        validator: (value) => value == null || value.trim().isEmpty
                             ? 'Enter last name'
                             : null,
                       ),

@@ -39,6 +39,27 @@ class _LoginPageState extends State<LoginPage> {
             password: _passwordController.text,
           );
     } on FirebaseAuthException catch (e) {
+      if (mounted && (e.code == 'user-not-found' || e.code == 'invalid-credential')) {
+        // If account not found, suggest registration
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Account not found. Create a new one?'),
+            action: SnackBarAction(
+              label: 'Register',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => RegisterPage(
+                      initialEmail: _emailController.text.trim(),
+                    ),
+                  ),
+                );
+              },
+            ),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
       setState(() {
         _error = e.message ?? 'Authentication error';
       });
@@ -301,7 +322,7 @@ class _LoginPageState extends State<LoginPage> {
                             : () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (_) => const RegisterPage(),
+                                    builder: (context) => const RegisterPage(),
                                   ),
                                 );
                               },

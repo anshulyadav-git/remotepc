@@ -156,7 +156,7 @@ class HomePage extends StatelessWidget {
                               user!.phoneNumber!.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Text(
-                              user!.phoneNumber!,
+                              user.phoneNumber!,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -225,7 +225,7 @@ class HomePage extends StatelessWidget {
                     context,
                     icon: Icons.fingerprint_rounded,
                     label: 'UID',
-                    value: (user?.uid ?? 'Unknown').substring(0, 5) + '...',
+                    value: '${(user?.uid ?? 'Unknown').substring(0, 5)}...',
                     color: Colors.blue,
                   ),
                 ),
@@ -256,7 +256,12 @@ class HomePage extends StatelessWidget {
                       ),
                 ),
                 TextButton.icon(
-                  onPressed: () {}, // TODO: Show full history
+                  onPressed: () {
+                    // TODO: Implement full history view
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Full history not implemented yet')),
+                    );
+                  },
                   icon: const Icon(Icons.history_rounded, size: 16),
                   label: const Text('View All'),
                 )

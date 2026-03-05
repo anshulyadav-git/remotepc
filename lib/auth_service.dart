@@ -1,10 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb
+        ? '127205810460-r2mf8j2476qnmp8q9cl33u21gdrnacon.apps.googleusercontent.com'
+        : null,
+  );
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   AuthService();
@@ -20,15 +25,12 @@ class AuthService {
         'userAgent': 'Flutter App', // In a real app, you could get more details
       });
     } catch (e) {
-      print('Error recording login: $e');
+      debugPrint('Error recording login: $e');
     }
   }
 
   Future<void> initialize() async {
-    // For web, passing the clientId explicitly as required by google_sign_in_web
-    await _googleSignIn.initialize(
-      clientId: '127205810460-i1g216e160mtqdsqo1n7sc7g14h193ie.apps.googleusercontent.com',
-    );
+    // No initialization needed with modern google_sign_in package
   }
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();
@@ -92,10 +94,13 @@ class AuthService {
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // In 7.2.0, authenticate() is the main method for interactive sign in
-      final googleUser = await _googleSignIn.authenticate();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        return null; // The user canceled the sign-in
+      }
 
-      final googleAuth = googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: null,
         idToken: googleAuth.idToken,

@@ -5,7 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  final String? initialEmail;
+  const RegisterPage({super.key, this.initialEmail});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -13,7 +14,7 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  late final TextEditingController _emailController;
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -22,6 +23,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmController = TextEditingController();
   bool _loading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail);
+  }
 
   @override
   void dispose() {

@@ -37,7 +37,7 @@ dependencies:
   firebase_core: any
   firebase_auth: any
   provider: any
-  google_sign_in: any
+  google_sign_in: ^6.2.1
   font_awesome_flutter: any
   cloud_firestore: any
 
