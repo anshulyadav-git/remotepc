@@ -16,6 +16,7 @@ class AuthService {
 
   Future<void> _recordLogin(User user, String method) async {
     try {
+      debugPrint('AuthService: Recording login for ${user.email} via $method');
       // 1. Record the login event in 'login_records' collection
       await _firestore.collection('login_records').add({
         'uid': user.uid,
@@ -26,10 +27,9 @@ class AuthService {
         'loginTime': FieldValue.serverTimestamp(),
         'method': method,
         'userAgent': 'Flutter App',
-      });
+      }).timeout(const Duration(seconds: 5));
 
       // 2. Update the 'users' collection with the latest profile data
-      // This ensures we have a master record for each user
       await _firestore.collection('users').doc(user.uid).set({
         'uid': user.uid,
         'email': user.email,
@@ -39,14 +39,29 @@ class AuthService {
         'lastLogin': FieldValue.serverTimestamp(),
         'authMethod': method,
         'emailVerified': user.emailVerified,
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+      debugPrint('AuthService: Login recorded successfully');
     } catch (e) {
-      debugPrint('Error recording login: $e');
+      debugPrint('AuthService: Error recording login: $e');
     }
   }
 
   Future<void> initialize() async {
-    // No initialization needed with modern google_sign_in package
+    try {
+      if (kIsWeb) {
+        debugPrint('AuthService: Initializing for Web');
+        await _auth.setPersistence(Persistence.LOCAL);
+        
+        // Handle redirect result if user was sent back to the site
+        final UserCredential userCred = await _auth.getRedirectResult();
+        if (userCred.user != null) {
+          debugPrint('AuthService: User found from redirect: ${userCred.user?.email}');
+          _recordLogin(userCred.user!, 'google_redirect');
+        }
+      }
+    } catch (e) {
+      debugPrint('AuthService: Error during initialization: $e');
+    }
   }
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();
@@ -55,12 +70,12 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    debugPrint('AuthService: Attempting email sign-in for $email');
     UserCredential credential = await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
     if (credential.user != null) {
-      // Don't await this to ensure immediate UI response
       _recordLogin(credential.user!, 'email');
     }
     return credential;
@@ -75,6 +90,7 @@ class AuthService {
     String? username,
     String? photoUrl,
   }) async {
+    debugPrint('AuthService: Registering new user: $email');
     UserCredential credential = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
@@ -85,7 +101,6 @@ class AuthService {
       lastName,
     ].where((s) => s != null && s.isNotEmpty).join(' ');
 
-    // Update display name and photo URL
     if (displayName.isNotEmpty || photoUrl != null) {
       await credential.user?.updateDisplayName(displayName);
       if (photoUrl != null) {
@@ -93,14 +108,11 @@ class AuthService {
       }
     }
 
-    // Send email verification
     if (credential.user != null && !credential.user!.emailVerified) {
       await credential.user!.sendEmailVerification();
     }
 
-    // Save additional user data to Firestore 'users' collection
     if (credential.user != null) {
-      // Don't await this to ensure immediate UI response
       _firestore.collection('users').doc(credential.user!.uid).set({
         'firstName': firstName,
         'lastName': lastName,
@@ -114,7 +126,6 @@ class AuthService {
       }, SetOptions(merge: true));
     }
 
-    // Record registration
     _recordLogin(credential.user!, 'email_register');
 
     return credential;
@@ -146,43 +157,65 @@ class AuthService {
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      debugPrint('AuthService: Starting Google Sign-In');
+      
+      if (kIsWeb) {
+        // Use Firebase Popup for Web to ensure data flows back to the same tab
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.setCustomParameters({'prompt': 'select_account'});
+        
+        final userCredential = await _auth.signInWithPopup(googleProvider);
+        if (userCredential.user != null) {
+          _recordLogin(userCredential.user!, 'google_web_popup');
+        }
+        return userCredential;
+      } else {
+        // Standard Mobile flow
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) return null;
 
-      if (googleUser == null) {
-        return null; // The user canceled the sign-in
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        UserCredential userCredential = await _auth.signInWithCredential(credential);
+        if (userCredential.user != null) {
+          _recordLogin(userCredential.user!, 'google_mobile');
+        }
+        return userCredential;
       }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
-      if (userCredential.user != null) {
-        _recordLogin(userCredential.user!, 'google');
-      }
-      return userCredential;
     } catch (e) {
-      return null;
+      debugPrint('AuthService: Google Sign-In error: $e');
+      rethrow;
     }
   }
 
   Future<UserCredential> signInWithGithub() async {
-    GithubAuthProvider githubProvider = GithubAuthProvider();
-    UserCredential credential = await _auth.signInWithProvider(githubProvider);
-    if (credential.user != null) {
-      _recordLogin(credential.user!, 'github');
+    debugPrint('AuthService: Starting GitHub Sign-In');
+    if (kIsWeb) {
+      final githubProvider = GithubAuthProvider();
+      return await _auth.signInWithPopup(githubProvider);
+    } else {
+      GithubAuthProvider githubProvider = GithubAuthProvider();
+      UserCredential credential = await _auth.signInWithProvider(githubProvider);
+      if (credential.user != null) {
+        _recordLogin(credential.user!, 'github');
+      }
+      return credential;
     }
-    return credential;
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    debugPrint('AuthService: Signing out');
+    if (kIsWeb) {
+      await _auth.signOut();
+    } else {
+      await _googleSignIn.signOut();
+      await _auth.signOut();
+    }
   }
 
   Future<void> sendEmailVerification() async {

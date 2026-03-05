@@ -32,6 +32,57 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            UserAccountsDrawerHeader(
+              currentAccountPicture: CircleAvatar(
+                backgroundImage: user?.photoURL != null
+                    ? NetworkImage(user!.photoURL!)
+                    : null,
+                child: user?.photoURL == null
+                    ? const Icon(Icons.person, size: 40)
+                    : null,
+              ),
+              accountName: Text(user?.displayName ?? 'User'),
+              accountEmail: Text(user?.email ?? ''),
+              decoration: BoxDecoration(color: colorScheme.primary),
+            ),
+            ListTile(
+              leading: const Icon(Icons.dashboard_outlined),
+              title: const Text('Dashboard'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.history_rounded),
+              title: const Text('Activity'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/activity');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+            const Spacer(),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout_rounded, color: Colors.red),
+              title: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                context.read<AuthService>().signOut();
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
         child: Column(
@@ -325,12 +376,7 @@ class HomePage extends StatelessWidget {
                 ),
                 TextButton.icon(
                   onPressed: () {
-                    // TODO: Implement full history view
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Full history not implemented yet'),
-                      ),
-                    );
+                    Navigator.pushNamed(context, '/activity');
                   },
                   icon: const Icon(Icons.history_rounded, size: 16),
                   label: const Text('View All'),
@@ -435,6 +481,9 @@ class HomePage extends StatelessWidget {
                               size: 16,
                               color: colorScheme.outline,
                             ),
+                            onTap: () {
+                                Navigator.pushNamed(context, '/activity');
+                            },
                           ),
                           if (!isLast)
                             Divider(

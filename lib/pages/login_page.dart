@@ -34,42 +34,34 @@ class _LoginPageState extends State<LoginPage> {
       _error = null;
     });
     try {
-      await context.read<AuthService>().signInWithEmail(
+      debugPrint('LoginPage: Starting sign-in for ${_emailController.text}');
+      final credential = await context.read<AuthService>().signInWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
-    } on FirebaseAuthException catch (e) {
-      if (mounted && (e.code == 'user-not-found' || e.code == 'invalid-credential')) {
-        // If account not found, suggest registration
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Account not found. Create a new one?'),
-            action: SnackBarAction(
-              label: 'Register',
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => RegisterPage(
-                      initialEmail: _emailController.text.trim(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
       
+      debugPrint('LoginPage: Sign-in successful for ${credential.user?.email}');
+      
+      // Fallback navigation if AuthGate is slow to respond
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } on FirebaseAuthException catch (e) {
+      debugPrint('LoginPage: FirebaseAuthException: ${e.code} - ${e.message}');
       String errorMessage = e.message ?? 'Authentication error';
-      if (e.code == 'too-many-requests') {
-        errorMessage = 'Too many failed attempts. Please try again later.';
-      } else if (e.code == 'user-disabled') {
-        errorMessage = 'This account has been disabled. Contact support.';
+      if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (e.code == 'operation-not-allowed') {
+        errorMessage = 'Email/Password login is not enabled in Firebase Console.';
       }
       
       setState(() {
-        _error = errorMessage;
+        _error = '[${e.code}] $errorMessage';
+      });
+    } catch (e) {
+      debugPrint('LoginPage: Unexpected error: $e');
+      setState(() {
+        _error = 'An unexpected error occurred: $e';
       });
     } finally {
       if (mounted) {
@@ -86,14 +78,26 @@ class _LoginPageState extends State<LoginPage> {
       _error = null;
     });
     try {
-      await context.read<AuthService>().signInWithGoogle();
+      debugPrint('LoginPage: Starting Google Sign-In');
+      final result = await context.read<AuthService>().signInWithGoogle();
+      
+      if (result != null) {
+        debugPrint('LoginPage: Google Sign-In successful for ${result.user?.email}');
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+      } else {
+        debugPrint('LoginPage: Google Sign-In cancelled or returned null');
+      }
     } on FirebaseAuthException catch (e) {
+      debugPrint('LoginPage: Google FirebaseAuthException: ${e.code} - ${e.message}');
       setState(() {
-        _error = e.message ?? 'Google sign-in error';
+        _error = '[${e.code}] ${e.message ?? "Google sign-in error"}';
       });
     } catch (e) {
+      debugPrint('LoginPage: Google unexpected error: $e');
       setState(() {
-        _error = 'An unexpected error occurred';
+        _error = 'An unexpected error occurred during Google sign-in: $e';
       });
     } finally {
       if (mounted) {
