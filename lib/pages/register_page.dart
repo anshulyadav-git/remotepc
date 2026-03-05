@@ -183,6 +183,49 @@ class _RegisterPageState extends State<RegisterPage> {
                   Row(
                     children: [
                       Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _loading ? null : _registerWithGoogle,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const FaIcon(FontAwesomeIcons.google, size: 18),
+                          label: const Text('Google'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _loading ? null : _registerWithGithub,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const FaIcon(FontAwesomeIcons.github, size: 18),
+                          label: const Text('GitHub'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('OR', style: TextStyle(color: Colors.grey)),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
                         child: TextFormField(
                           controller: _firstNameController,
                           decoration: const InputDecoration(
@@ -303,50 +346,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           : const Text('Create Account'),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  const Row(
-                    children: [
-                      Expanded(child: Divider()),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('OR', style: TextStyle(color: Colors.grey)),
-                      ),
-                      Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _loading ? null : _registerWithGoogle,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          icon: const FaIcon(FontAwesomeIcons.google, size: 18),
-                          label: const Text('Google'),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _loading ? null : _registerWithGithub,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          icon: const FaIcon(FontAwesomeIcons.github, size: 18),
-                          label: const Text('GitHub'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                 ],
               ),
             ),

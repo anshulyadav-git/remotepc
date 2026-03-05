@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "login-aydigi"
-  }
+  },
+  "targets": {
+    "login-aydigi": {
+      "hosting": {
+        "login": [
+          "login-aydigi"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

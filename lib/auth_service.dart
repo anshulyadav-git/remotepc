@@ -16,14 +16,30 @@ class AuthService {
 
   Future<void> _recordLogin(User user, String method) async {
     try {
+      // 1. Record the login event in 'login_records' collection
       await _firestore.collection('login_records').add({
         'uid': user.uid,
         'email': user.email,
         'displayName': user.displayName,
+        'photoURL': user.photoURL,
+        'phoneNumber': user.phoneNumber,
         'loginTime': FieldValue.serverTimestamp(),
         'method': method,
-        'userAgent': 'Flutter App', // In a real app, you could get more details
+        'userAgent': 'Flutter App',
       });
+
+      // 2. Update the 'users' collection with the latest profile data
+      // This ensures we have a master record for each user
+      await _firestore.collection('users').doc(user.uid).set({
+        'uid': user.uid,
+        'email': user.email,
+        'displayName': user.displayName,
+        'photoURL': user.photoURL,
+        'phoneNumber': user.phoneNumber,
+        'lastLogin': FieldValue.serverTimestamp(),
+        'authMethod': method,
+        'emailVerified': user.emailVerified,
+      }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('Error recording login: $e');
     }
@@ -75,6 +91,20 @@ class AuthService {
     // Send email verification
     if (credential.user != null && !credential.user!.emailVerified) {
       await credential.user!.sendEmailVerification();
+    }
+
+    // Save additional user data to Firestore 'users' collection
+    if (credential.user != null) {
+      await _firestore.collection('users').doc(credential.user!.uid).set({
+        'firstName': firstName,
+        'lastName': lastName,
+        'username': username,
+        'phoneNumber': phoneNumber, // Manual phone input
+        'email': email,
+        'displayName': displayName,
+        'createdAt': FieldValue.serverTimestamp(),
+        'uid': credential.user!.uid,
+      }, SetOptions(merge: true));
     }
 
     // Record registration
