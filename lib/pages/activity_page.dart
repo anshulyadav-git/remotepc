@@ -23,6 +23,41 @@ class ActivityPage extends StatelessWidget {
             .orderBy('loginTime', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            debugPrint('ActivityPage: Firestore Error: ${snapshot.error}');
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading activity:',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      snapshot.error.toString(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                    if (snapshot.error.toString().contains('index'))
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16.0),
+                        child: Text(
+                          'Note: You might need to create a Firestore index for this query. Check the browser console for the link.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }

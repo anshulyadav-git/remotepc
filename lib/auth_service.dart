@@ -195,16 +195,25 @@ class AuthService {
 
   Future<UserCredential> signInWithGithub() async {
     debugPrint('AuthService: Starting GitHub Sign-In');
-    if (kIsWeb) {
-      final githubProvider = GithubAuthProvider();
-      return await _auth.signInWithPopup(githubProvider);
-    } else {
-      GithubAuthProvider githubProvider = GithubAuthProvider();
-      UserCredential credential = await _auth.signInWithProvider(githubProvider);
-      if (credential.user != null) {
-        _recordLogin(credential.user!, 'github');
+    try {
+      if (kIsWeb) {
+        final githubProvider = GithubAuthProvider();
+        final userCredential = await _auth.signInWithPopup(githubProvider);
+        if (userCredential.user != null) {
+          _recordLogin(userCredential.user!, 'github_web_popup');
+        }
+        return userCredential;
+      } else {
+        GithubAuthProvider githubProvider = GithubAuthProvider();
+        UserCredential credential = await _auth.signInWithProvider(githubProvider);
+        if (credential.user != null) {
+          _recordLogin(credential.user!, 'github_mobile');
+        }
+        return credential;
       }
-      return credential;
+    } catch (e) {
+      debugPrint('AuthService: GitHub Sign-In error: $e');
+      rethrow;
     }
   }
 
