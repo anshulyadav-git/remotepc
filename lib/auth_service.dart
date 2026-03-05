@@ -60,7 +60,8 @@ class AuthService {
       password: password,
     );
     if (credential.user != null) {
-      await _recordLogin(credential.user!, 'email');
+      // Don't await this to ensure immediate UI response
+      _recordLogin(credential.user!, 'email');
     }
     return credential;
   }
@@ -72,6 +73,7 @@ class AuthService {
     String? lastName,
     String? phoneNumber,
     String? username,
+    String? photoUrl,
   }) async {
     UserCredential credential = await _auth.createUserWithEmailAndPassword(
       email: email,
@@ -83,9 +85,12 @@ class AuthService {
       lastName,
     ].where((s) => s != null && s.isNotEmpty).join(' ');
 
-    // Update display name
-    if (displayName.isNotEmpty) {
+    // Update display name and photo URL
+    if (displayName.isNotEmpty || photoUrl != null) {
       await credential.user?.updateDisplayName(displayName);
+      if (photoUrl != null) {
+        await credential.user?.updatePhotoURL(photoUrl);
+      }
     }
 
     // Send email verification
@@ -95,20 +100,22 @@ class AuthService {
 
     // Save additional user data to Firestore 'users' collection
     if (credential.user != null) {
-      await _firestore.collection('users').doc(credential.user!.uid).set({
+      // Don't await this to ensure immediate UI response
+      _firestore.collection('users').doc(credential.user!.uid).set({
         'firstName': firstName,
         'lastName': lastName,
         'username': username,
-        'phoneNumber': phoneNumber, // Manual phone input
+        'phoneNumber': phoneNumber,
         'email': email,
         'displayName': displayName,
+        'photoURL': photoUrl,
         'createdAt': FieldValue.serverTimestamp(),
         'uid': credential.user!.uid,
       }, SetOptions(merge: true));
     }
 
     // Record registration
-    await _recordLogin(credential.user!, 'email_register');
+    _recordLogin(credential.user!, 'email_register');
 
     return credential;
   }
@@ -148,7 +155,7 @@ class AuthService {
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: null,
+        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
@@ -156,7 +163,7 @@ class AuthService {
         credential,
       );
       if (userCredential.user != null) {
-        await _recordLogin(userCredential.user!, 'google');
+        _recordLogin(userCredential.user!, 'google');
       }
       return userCredential;
     } catch (e) {
@@ -168,7 +175,7 @@ class AuthService {
     GithubAuthProvider githubProvider = GithubAuthProvider();
     UserCredential credential = await _auth.signInWithProvider(githubProvider);
     if (credential.user != null) {
-      await _recordLogin(credential.user!, 'github');
+      _recordLogin(credential.user!, 'github');
     }
     return credential;
   }

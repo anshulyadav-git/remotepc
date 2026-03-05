@@ -22,6 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _photoUrlController = TextEditingController();
   bool _loading = false;
   String? _error;
 
@@ -40,6 +41,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _photoUrlController.dispose();
     super.dispose();
   }
 
@@ -51,13 +53,16 @@ class _RegisterPageState extends State<RegisterPage> {
     });
     try {
       await context.read<AuthService>().registerWithEmail(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        firstName: _firstNameController.text.trim(),
-        lastName: _lastNameController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
-        username: _usernameController.text.trim(),
-      );
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            firstName: _firstNameController.text.trim(),
+            lastName: _lastNameController.text.trim(),
+            phoneNumber: _phoneController.text.trim(),
+            username: _usernameController.text.trim(),
+            photoUrl: _photoUrlController.text.trim().isEmpty
+                ? null
+                : _photoUrlController.text.trim(),
+          );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -279,6 +284,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     decoration: const InputDecoration(
                       labelText: 'Phone Number',
                       prefixIcon: Icon(Icons.phone_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _photoUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'Profile Photo URL (Optional)',
+                      prefixIcon: Icon(Icons.link_rounded),
                     ),
                   ),
                   const SizedBox(height: 16),

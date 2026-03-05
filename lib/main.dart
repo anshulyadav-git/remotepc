@@ -5,6 +5,8 @@ import 'auth_service.dart';
 import 'firebase_options.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
+import 'pages/register_page.dart';
+import 'pages/profile_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +30,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Login',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -49,21 +52,17 @@ class App extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
           ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.red, width: 1),
-          ),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
         ),
       ),
-      home: const AuthGate(),
+      // Use routes for explicit navigation
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const AuthGate(),
+        '/login': (context) => const LoginPage(),
+        '/home': (context) => const HomePage(),
+        '/register': (context) => const RegisterPage(),
+        '/profile': (context) => const ProfilePage(),
+      },
     );
   }
 }
@@ -82,9 +81,13 @@ class AuthGate extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        if (snapshot.hasData) {
+        
+        // If user is logged in, show HomePage
+        if (snapshot.hasData && snapshot.data != null) {
           return const HomePage();
         }
+        
+        // Otherwise show LoginPage
         return const LoginPage();
       },
     );
