@@ -60,8 +60,16 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       }
+      
+      String errorMessage = e.message ?? 'Authentication error';
+      if (e.code == 'too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later.';
+      } else if (e.code == 'user-disabled') {
+        errorMessage = 'This account has been disabled. Contact support.';
+      }
+      
       setState(() {
-        _error = e.message ?? 'Authentication error';
+        _error = errorMessage;
       });
     } finally {
       if (mounted) {

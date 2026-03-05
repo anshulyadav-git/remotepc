@@ -35,10 +35,14 @@ class AuthService {
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
-  Future<UserCredential> signInWithEmail(
-      {required String email, required String password}) async {
-    UserCredential credential =
-        await _auth.signInWithEmailAndPassword(email: email, password: password);
+  Future<UserCredential> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    UserCredential credential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
     if (credential.user != null) {
       await _recordLogin(credential.user!, 'email');
     }
@@ -54,32 +58,43 @@ class AuthService {
     String? username,
   }) async {
     UserCredential credential = await _auth.createUserWithEmailAndPassword(
-        email: email, password: password);
+      email: email,
+      password: password,
+    );
 
-    String displayName = [firstName, lastName]
-        .where((s) => s != null && s.isNotEmpty)
-        .join(' ');
+    String displayName = [
+      firstName,
+      lastName,
+    ].where((s) => s != null && s.isNotEmpty).join(' ');
 
     // Update display name
     if (displayName.isNotEmpty) {
       await credential.user?.updateDisplayName(displayName);
     }
 
-    // Note: To store extra fields like phone number and username,
-    // we would typically use Firestore. For now, we update the user object where possible.
-    // Firebase Auth has a phoneNumber field but it's usually set via phone auth.
-    // We can use the 'displayName' or a custom Firestore document for more metadata.
+    // Send email verification
+    if (credential.user != null && !credential.user!.emailVerified) {
+      await credential.user!.sendEmailVerification();
+    }
+
+    // Record registration
+    await _recordLogin(credential.user!, 'email_register');
 
     return credential;
   }
 
-  Future<void> updateProfile({String? firstName, String? lastName, String? photoUrl}) async {
+  Future<void> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? photoUrl,
+  }) async {
     User? user = _auth.currentUser;
     if (user != null) {
       if (firstName != null || lastName != null) {
-        String displayName = [firstName, lastName]
-            .where((s) => s != null && s.isNotEmpty)
-            .join(' ');
+        String displayName = [
+          firstName,
+          lastName,
+        ].where((s) => s != null && s.isNotEmpty).join(' ');
         await user.updateDisplayName(displayName);
       }
       if (photoUrl != null) {
@@ -95,18 +110,21 @@ class AuthService {
   Future<UserCredential?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         return null; // The user canceled the sign-in
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: null,
         idToken: googleAuth.idToken,
       );
 
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
+      UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
       if (userCredential.user != null) {
         await _recordLogin(userCredential.user!, 'google');
       }
@@ -128,5 +146,30 @@ class AuthService {
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+  }
+
+  Future<void> sendEmailVerification() async {
+    User? user = _auth.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      await user.delete();
+    }
+  }
+
+  Future<void> reauthenticateWithEmail(String email, String password) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+    }
   }
 }

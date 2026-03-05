@@ -57,7 +57,18 @@ class _RegisterPageState extends State<RegisterPage> {
             phoneNumber: _phoneController.text.trim(),
             username: _usernameController.text.trim(),
           );
-      if (mounted) Navigator.of(context).pop();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Account created! Please check your email to verify your account.'),
+            duration: Duration(seconds: 5),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _error = e.message ?? 'Registration error';

@@ -29,7 +29,7 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.logout_rounded),
               tooltip: 'Sign out',
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -37,22 +37,83 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (user != null && !user.emailVerified)
+              Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  border: Border.all(
+                    color: Colors.orange.withValues(alpha: 0.5),
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.mark_email_unread_rounded,
+                      color: Colors.orange[800],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Verify your email',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange[900],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Please verify your email address to access all features.',
+                            style: TextStyle(
+                              color: Colors.orange[900]!.withValues(alpha: 0.8),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await context
+                            .read<AuthService>()
+                            .sendEmailVerification();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Verification email sent!'),
+                            ),
+                          );
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.orange[900],
+                      ),
+                      child: const Text('Resend'),
+                    ),
+                  ],
+                ),
+              ),
             // Welcome Header
             const SizedBox(height: 16),
             Text(
               'Welcome back,',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                  ),
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               user?.displayName ?? (user?.email?.split('@').first ?? 'User'),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 32),
 
@@ -97,8 +158,11 @@ class HomePage extends StatelessWidget {
                                 ? NetworkImage(user!.photoURL!)
                                 : null,
                             child: user?.photoURL == null
-                                ? Icon(Icons.person_rounded,
-                                    size: 36, color: colorScheme.primary)
+                                ? Icon(
+                                    Icons.person_rounded,
+                                    size: 36,
+                                    color: colorScheme.primary,
+                                  )
                                 : null,
                           ),
                         ),
@@ -119,13 +183,17 @@ class HomePage extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => const ProfilePage()),
+                                    builder: (context) => const ProfilePage(),
+                                  ),
                                 );
                               },
                               child: Padding(
                                 padding: const EdgeInsets.all(6.0),
-                                child: Icon(Icons.edit_rounded,
-                                    size: 14, color: colorScheme.onPrimary),
+                                child: Icon(
+                                  Icons.edit_rounded,
+                                  size: 14,
+                                  color: colorScheme.onPrimary,
+                                ),
                               ),
                             ),
                           ),
@@ -139,7 +207,8 @@ class HomePage extends StatelessWidget {
                         children: [
                           Text(
                             user?.displayName ?? 'Anonymous User',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: colorScheme.onPrimaryContainer,
                                 ),
@@ -147,7 +216,8 @@ class HomePage extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             user?.email ?? 'No email linked',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
                                   color: colorScheme.onPrimaryContainer
                                       .withValues(alpha: 0.7),
                                 ),
@@ -157,9 +227,7 @@ class HomePage extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               user.phoneNumber!,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: colorScheme.onPrimaryContainer
                                         .withValues(alpha: 0.7),
@@ -169,7 +237,9 @@ class HomePage extends StatelessWidget {
                           const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: colorScheme.surface.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(20),
@@ -189,9 +259,7 @@ class HomePage extends StatelessWidget {
                                   user?.emailVerified == true
                                       ? 'Verified Account'
                                       : 'Unverified',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
+                                  style: Theme.of(context).textTheme.labelSmall
                                       ?.copyWith(
                                         color: colorScheme.onPrimaryContainer,
                                         fontWeight: FontWeight.bold,
@@ -211,9 +279,9 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 32),
             Text(
               'Account Overview',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -235,10 +303,10 @@ class HomePage extends StatelessWidget {
                     context,
                     icon: Icons.calendar_today_rounded,
                     label: 'Joined',
-                    value: user?.metadata.creationTime
-                            ?.toLocal()
-                            .toString()
-                            .split(' ')[0] ??
+                    value:
+                        user?.metadata.creationTime?.toLocal().toString().split(
+                          ' ',
+                        )[0] ??
                         'N/A',
                     color: Colors.orange,
                   ),
@@ -252,28 +320,32 @@ class HomePage extends StatelessWidget {
                 Text(
                   'Recent Activity',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 TextButton.icon(
                   onPressed: () {
                     // TODO: Implement full history view
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Full history not implemented yet')),
+                      const SnackBar(
+                        content: Text('Full history not implemented yet'),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.history_rounded, size: 16),
                   label: const Text('View All'),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
               clipBehavior: Clip.antiAlias,
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
@@ -295,11 +367,16 @@ class HomePage extends StatelessWidget {
                       child: Center(
                         child: Column(
                           children: [
-                            Icon(Icons.history_toggle_off_rounded,
-                                size: 48, color: colorScheme.outline),
+                            Icon(
+                              Icons.history_toggle_off_rounded,
+                              size: 48,
+                              color: colorScheme.outline,
+                            ),
                             const SizedBox(height: 12),
-                            Text('No recent activity',
-                                style: TextStyle(color: colorScheme.outline)),
+                            Text(
+                              'No recent activity',
+                              style: TextStyle(color: colorScheme.outline),
+                            ),
                           ],
                         ),
                       ),
@@ -310,8 +387,8 @@ class HomePage extends StatelessWidget {
                       final index = entry.key;
                       final doc = entry.value;
                       final data = doc.data() as Map<String, dynamic>;
-                      final loginTime =
-                          (data['loginTime'] as Timestamp?)?.toDate();
+                      final loginTime = (data['loginTime'] as Timestamp?)
+                          ?.toDate();
                       final method = data['method'] as String? ?? 'unknown';
                       final isLast = index == snapshot.data!.docs.length - 1;
 
@@ -319,7 +396,9 @@ class HomePage extends StatelessWidget {
                         children: [
                           ListTile(
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
                             leading: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
@@ -330,33 +409,41 @@ class HomePage extends StatelessWidget {
                                 method == 'google'
                                     ? FontAwesomeIcons.google
                                     : method == 'github'
-                                        ? FontAwesomeIcons.github
-                                        : Icons.email_rounded,
+                                    ? FontAwesomeIcons.github
+                                    : Icons.email_rounded,
                                 size: 18,
                                 color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                             title: Text(
                               'Login via ${method[0].toUpperCase()}${method.substring(1)}',
-                              style: const TextStyle(fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             subtitle: Text(
                               loginTime != null
                                   ? '${loginTime.year}-${loginTime.month}-${loginTime.day} at ${loginTime.hour}:${loginTime.minute.toString().padLeft(2, '0')}'
                                   : 'N/A',
                               style: TextStyle(
-                                  color: colorScheme.onSurfaceVariant,
-                                  fontSize: 12),
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
                             ),
-                            trailing: Icon(Icons.chevron_right_rounded,
-                                size: 16, color: colorScheme.outline),
+                            trailing: Icon(
+                              Icons.chevron_right_rounded,
+                              size: 16,
+                              color: colorScheme.outline,
+                            ),
                           ),
                           if (!isLast)
                             Divider(
-                                height: 1,
-                                indent: 64,
-                                color: colorScheme.outlineVariant
-                                    .withValues(alpha: 0.5)),
+                              height: 1,
+                              indent: 64,
+                              color: colorScheme.outlineVariant.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
                         ],
                       );
                     }).toList(),
@@ -371,18 +458,22 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(BuildContext context,
-      {required IconData icon,
-      required String label,
-      required String value,
-      required Color color}) {
+  Widget _buildInfoCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,10 +498,7 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -418,4 +506,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
